@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quizlerr/quiz_brain.dart';
 
 void main() {
   runApp(
@@ -17,26 +18,38 @@ void main() {
 }
 
 class Quizzler extends StatefulWidget {
-  Quizzler({super.key});
+  const Quizzler({super.key});
 
   @override
   State<Quizzler> createState() => _QuizzlerState();
 }
 
 class _QuizzlerState extends State<Quizzler> {
-  final List questions = [
-    'You can lead a cow down stairs but not up stairs.',
-    'Approximately one quarter of human bones are in the feet.',
-    'A slug\'s blood is green.',
-  ];
+  QuizBrain quizBrain = QuizBrain();
+  final List<Icon> scoreKeeper = [];
 
-  int questionNumber = 0;
-
-  final List<Icon> scoreKeeper = [
-    Icon(Icons.check, color: Colors.green),
-    Icon(Icons.close, color: Colors.red),
-    Icon(Icons.check, color: Colors.green),
-  ];
+  void checkAnswer(bool userPickAnswer) {
+    setState(() {
+      if (quizBrain.isFinished() == true) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: Text('Finished!'),
+            content: Text('You\'ve reached the end of the quiz.'),
+          ),
+        );
+        quizBrain.reset();
+        scoreKeeper.clear();
+      } else {
+        if (quizBrain.getQuestionAnswer() == userPickAnswer) {
+          scoreKeeper.add(Icon(Icons.check, color: Colors.green));
+        } else {
+          scoreKeeper.add(Icon(Icons.close, color: Colors.red));
+        }
+        quizBrain.nextQuestion();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +62,7 @@ class _QuizzlerState extends State<Quizzler> {
             padding: const EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                questions[questionNumber],
-
+                quizBrain.getQuestionText(),
                 style: TextStyle(fontSize: 25.0, color: Colors.white),
                 textAlign: TextAlign.center,
               ),
@@ -64,10 +76,7 @@ class _QuizzlerState extends State<Quizzler> {
             child: TextButton(
               style: TextButton.styleFrom(backgroundColor: Colors.green),
               onPressed: () {
-                setState(() {
-                  questionNumber++;
-                  scoreKeeper.add(Icon(Icons.check, color: Colors.green));
-                });
+                checkAnswer(true);
               },
               child: Text(
                 'True',
@@ -81,7 +90,9 @@ class _QuizzlerState extends State<Quizzler> {
             padding: const EdgeInsets.all(15.0),
             child: TextButton(
               style: TextButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () {},
+              onPressed: () {
+                checkAnswer(false);
+              },
               child: Text(
                 'False',
                 style: TextStyle(color: Colors.white, fontSize: 20),
